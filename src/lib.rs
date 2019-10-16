@@ -11,8 +11,8 @@ impl Post {
         }
     }
 
-    pub fn add_text(&mut self, text: &str) {
-        self.content.push_str(text);
+    pub fn add_text(&self, text: &str) {
+        self.state.as_ref().unwrap().add_text(self, text);
     }
 
     pub fn content(&self) -> &str {
@@ -30,6 +30,12 @@ impl Post {
             self.state = Some(s.approve())
         }
     }
+
+    pub fn reject(&mut self) {
+        if let Some(s) = self.state.take() {
+            self.state = Some(s.reject())
+        }
+    }
 }
 
 trait State {
@@ -39,29 +45,56 @@ trait State {
     fn content<'a>(&self, post: &'a Post) -> &'a str {
         ""
     }
+
+    fn reject(self: Box<Self>) -> Box<dyn State>;
+
+    fn add_text(&self, post: &mut Post, text: &str) {}
 }
 
 struct Draft {}
 
 impl State for Draft {
     fn request_review(self: Box<Self>) -> Box<dyn State> {
-        Box::new(PendingReview {})
+        Box::new(PendingReview {
+            approve_count: 0,
+        })
     }
 
     fn approve(self: Box<Self>) -> Box<dyn State> {
         self
     }
+
+    fn reject(self: Box<Self>) -> Box<dyn State> {
+        println!("Draft");
+        self
+    }
+
+    fn add_text(&self, post: &mut Post, text: &str) {
+        post.content.push_str(text);
+    }
 }
 
-struct PendingReview {}
+struct PendingReview {
+    approve_count: u8,
+}
 
 impl State for PendingReview {
     fn request_review(self: Box<Self>) -> Box<dyn State> {
         self
     }
 
-    fn approve(self: Box<Self>) -> Box<dyn State> {
-        Box::new(Published {})
+    fn approve(mut self: Box<Self>) -> Box<dyn State> {
+        self.approve_count += 1;
+        if self.approve_count >= 2 {
+            Box::new(Published {})
+        } else {
+            self
+        }
+    }
+
+    fn reject(self: Box<Self>) -> Box<dyn State> {
+        println!("Changing to draft");
+        Box::new(Draft {})
     }
 }
 
@@ -78,5 +111,9 @@ impl State for Published {
 
     fn content<'a>(&self, post: &'a Post) -> &'a str {
         &post.content
+    }
+
+    fn reject(self: Box<Self>) -> Box<dyn State> {
+        self
     }
 }

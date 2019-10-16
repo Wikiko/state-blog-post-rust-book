@@ -10,5 +10,16 @@ fn main() {
     assert_eq!("", post.content());
 
     post.approve();
-    assert_eq!("I ate a salad for lunch today", post.content())
+    post.approve();
+    assert_eq!("I ate a salad for lunch today", post.content());
+
+    let mut post2 = Post::new();
+
+    post2.add_text("Hi I'm William");
+    assert_eq!("", post2.content());
+
+    post2.request_review();
+    assert_eq!("", post2.content());
+
+    post2.reject();
 }
