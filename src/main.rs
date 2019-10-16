@@ -21,5 +21,20 @@ fn main() {
     post2.request_review();
     assert_eq!("", post2.content());
 
-    post2.reject();
+    post2.approve();
+    post2.approve();
+    assert_eq!("Hi I'm William", post2.content());
+
+    let mut post3 = Post::new();
+
+    post3.request_review();
+    assert_eq!("", post3.content());
+
+    post3.add_text("LOL");
+    assert_eq!("", post3.content());
+
+    post3.approve();
+    post3.approve();
+    assert_eq!("", post3.content());
+
 }

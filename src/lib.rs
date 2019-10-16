@@ -12,7 +12,7 @@ impl Post {
     }
 
     pub fn add_text(&mut self, text: &str) {
-        self.state.as_ref().unwrap().add_text(self, text);
+        self.state.as_ref().unwrap().add_text(&mut self.content, text);
     }
 
     pub fn content(&self) -> &str {
@@ -48,7 +48,7 @@ trait State {
 
     fn reject(self: Box<Self>) -> Box<dyn State>;
 
-    fn add_text(&self, post: &mut Post, text: &str) {}
+    fn add_text(&self, post: &mut String, text: &str) {}
 }
 
 struct Draft {}
@@ -69,8 +69,8 @@ impl State for Draft {
         self
     }
 
-    fn add_text(&self, post: &mut Post, text: &str) {
-        post.content.push_str(text);
+    fn add_text(&self, content: &mut String, text: &str) {
+        content.push_str(text);
     }
 }
 
